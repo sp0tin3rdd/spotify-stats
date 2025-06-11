@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Stats Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-section {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+
+        .auth-button {
+            background: #1DB954;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .auth-button:hover {
+            background: #1ed760;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(29, 185, 84, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1DB954;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #b3b3b3;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #1DB954;
+        }
+
+        .top-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .item-rank {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #1DB954;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .item-image {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            object-fit: cover;
+        }
+
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .item-artist {
+            color: #b3b3b3;
+            font-size: 0.9rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .time-range-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .time-button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-button.active {
+            background: #1DB954;
+            border-color: #1DB954;
+        }
+
+        .time-button:hover {
+            background: rgba(29, 185, 84, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #b3b3b3;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            color: #ff6b6b;
+        }
+
+        .info-box {
+            background: rgba(29, 185, 84, 0.1);
+            border: 1px solid rgba(29, 185, 84, 0.3);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .info-box h3 {
+            margin-bottom: 1rem;
+            color: #1DB954;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-box li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Spotify Stats Tracker</h1>
+        
+        <div id="authSection" class="auth-section">
+            <h2>Połącz się ze Spotify</h2>
+            <p style="margin-bottom: 2rem; color: #b3b3b3;">
+                Kliknij poniżej, aby autoryzować dostęp do Twoich statystyk Spotify
+            </p>
+            <button class="auth-button" onclick="authorizeSpotify()">
+                Połącz ze Spotify
+            </button>
+        </div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="time-range-selector">
+                <button class="time-button active" onclick="changeTimeRange('short_term')">Ostatnie 4 tygodnie</button>
+                <button class="time-button" onclick="changeTimeRange('medium_term')">Ostatnie 6 miesięcy</button>
+                <button class="time-button" onclick="changeTimeRange('long_term')">Ostatni rok</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMinutes">-</div>
+                    <div class="stat-label">Minut przesłuchanych</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalHours">-</div>
+                    <div class="stat-label">Godzin przesłuchanych</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uniqueTracks">-</div>
+                    <div class="stat-label">Unikalnych utworów</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="topGenre">-</div>
+                    <div class="stat-label">Ulubiony gatunek</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🎵 Top Utwory</h2>
+                <div id="topTracks" class="top-items loading">Ładowanie...</div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🎤 Top Artyści</h2>
+                <div id="topArtists" class="top-items loading">Ładowanie...</div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🎸 Top Gatunki</h2>
+                <div id="topGenres" class="top-items loading">Ładowanie...</div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>ℹ️ Informacje o aplikacji</h3>
+            <ul>
+                <li><strong>Jak to działa:</strong> Aplikacja korzysta ze Spotify Web API do pobierania Twoich statystyk</li>
+                <li><strong>Prywatność:</strong> Wszystkie dane są przetwarzane lokalnie w przeglądarce</li>
+                <li><strong>Ograniczenia:</strong> Spotify nie udostępnia dokładnej liczby minut - wartości są szacowane na podstawie historii odtwarzania</li>
+                <li><strong>Wskazówka:</strong> Aby uzyskać pełny dostęp, musisz najpierw zarejestrować aplikację w Spotify Dashboard</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Konfiguracja Spotify API
+        const CLIENT_ID = '525a5dfa8a8245a38a315caed68a77ba'; 
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+        const SCOPES = 'user-top-read user-read-recently-played user-read-private';
+        
+        let accessToken = null;
+        let currentTimeRange = 'short_term';
+
+        // Sprawdź, czy mamy token w URL
+        function checkForToken() {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            accessToken = params.get('access_token');
+            
+            if (accessToken) {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                loadAllData();
+                // Wyczyść hash z URL
+                window.history.replaceState(null, null, window.location.pathname);
+            }
+        }
+
+        // Autoryzacja Spotify
+        function authorizeSpotify() {
+            if (CLIENT_ID === 'TWOJ_CLIENT_ID') {
+                alert('Musisz najpierw skonfigurować aplikację!\n\n1. Wejdź na https://developer.spotify.com/dashboard\n2. Stwórz nową aplikację\n3. Dodaj Redirect URI: ' + REDIRECT_URI + '\n4. Skopiuj Client ID i wstaw go w kodzie');
+                return;
+            }
+            
+            const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token`;
+            window.location.href = authUrl;
+        }
+
+        // Zmiana zakresu czasowego
+        function changeTimeRange(range) {
+            currentTimeRange = range;
+            document.querySelectorAll('.time-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadAllData();
+        }
+
+        // Pobierz dane z API
+        async function fetchSpotifyData(endpoint) {
+            try {
+                const response = await fetch(`https://api.spotify.com/v1${endpoint}`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API Error');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        // Załaduj wszystkie dane
+        async function loadAllData() {
+            // Pobierz top utwory
+            const topTracks = await fetchSpotifyData(`/me/top/tracks?time_range=${currentTimeRange}&limit=10`);
+            displayTopTracks(topTracks);
+            
+            // Pobierz top artystów
+            const topArtists = await fetchSpotifyData(`/me/top/artists?time_range=${currentTimeRange}&limit=10`);
+            displayTopArtists(topArtists);
+            
+            // Pobierz ostatnio odtwarzane (do szacowania czasu)
+            const recentlyPlayed = await fetchSpotifyData('/me/player/recently-played?limit=50');
+            estimateListeningTime(recentlyPlayed);
+            
+            // Wyświetl gatunki na podstawie artystów
+            displayTopGenres(topArtists);
+        }
+
+        // Wyświetl top utwory
+        function displayTopTracks(data) {
+            const container = document.getElementById('topTracks');
+            if (!data || !data.items) {
+                container.innerHTML = '<div class="error">Nie udało się pobrać utworów</div>';
+                return;
+            }
+            
+            container.innerHTML = data.items.map((track, index) => `
+                <div class="item-card">
+                    <div class="item-rank">${index + 1}</div>
+                    <img src="${track.album.images[0]?.url || ''}" alt="${track.name}" class="item-image">
+                    <div class="item-name">${track.name}</div>
+                    <div class="item-artist">${track.artists.map(a => a.name).join(', ')}</div>
+                </div>
+            `).join('');
+        }
+
+        // Wyświetl top artystów
+        function displayTopArtists(data) {
+            const container = document.getElementById('topArtists');
+            if (!data || !data.items) {
+                container.innerHTML = '<div class="error">Nie udało się pobrać artystów</div>';
+                return;
+            }
+            
+            container.innerHTML = data.items.map((artist, index) => `
+                <div class="item-card">
+                    <div class="item-rank">${index + 1}</div>
+                    <img src="${artist.images[0]?.url || ''}" alt="${artist.name}" class="item-image">
+                    <div class="item-name">${artist.name}</div>
+                    <div class="item-artist">${artist.followers.total.toLocaleString()} obserwujących</div>
+                </div>
+            `).join('');
+        }
+
+        // Wyświetl top gatunki
+        function displayTopGenres(data) {
+            const container = document.getElementById('topGenres');
+            if (!data || !data.items) {
+                container.innerHTML = '<div class="error">Nie udało się pobrać gatunków</div>';
+                return;
+            }
+            
+            // Zbierz wszystkie gatunki od artystów
+            const genreCounts = {};
+            data.items.forEach(artist => {
+                artist.genres.forEach(genre => {
+                    genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+                });
+            });
+            
+            // Sortuj gatunki po popularności
+            const sortedGenres = Object.entries(genreCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            if (sortedGenres.length === 0) {
+                container.innerHTML = '<div class="error">Brak danych o gatunkach</div>';
+                return;
+            }
+            
+            // Ustaw ulubiony gatunek
+            document.getElementById('topGenre').textContent = sortedGenres[0][0];
+            
+            container.innerHTML = sortedGenres.map(([genre, count], index) => `
+                <div class="item-card">
+                    <div class="item-rank">${index + 1}</div>
+                    <div style="padding: 2rem 0; text-align: center;">
+                        <div class="item-name">${genre}</div>
+                        <div class="item-artist">${count} artystów</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Szacuj czas słuchania
+        function estimateListeningTime(data) {
+            if (!data || !data.items) {
+                document.getElementById('totalMinutes').textContent = '-';
+                document.getElementById('totalHours').textContent = '-';
+                document.getElementById('uniqueTracks').textContent = '-';
+                return;
+            }
+            
+            // To jest tylko szacowanie na podstawie ostatnio odtwarzanych
+            // Spotify nie udostępnia dokładnych statystyk czasu
+            const avgSongLength = 3.5; // średnia długość piosenki w minutach
+            const uniqueTracks = new Set(data.items.map(item => item.track.id)).size;
+            
+            // Szacowanie na podstawie zakresu czasowego
+            let estimatedMinutes;
+            switch(currentTimeRange) {
+                case 'short_term':
+                    estimatedMinutes = uniqueTracks * avgSongLength * 5; // zakładamy 5 odtworzeń na utwór
+                    break;
+                case 'medium_term':
+                    estimatedMinutes = uniqueTracks * avgSongLength * 15;
+                    break;
+                case 'long_term':
+                    estimatedMinutes = uniqueTracks * avgSongLength * 30;
+                    break;
+            }
+            
+            document.getElementById('totalMinutes').textContent = Math.round(estimatedMinutes).toLocaleString();
+            document.getElementById('totalHours').textContent = Math.round(estimatedMinutes / 60).toLocaleString();
+            document.getElementById('uniqueTracks').textContent = uniqueTracks;
+        }
+
+        // Inicjalizacja
+        checkForToken();
+    </script>
+</body>
+</html>
